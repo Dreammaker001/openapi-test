@@ -1,0 +1,198 @@
+openapi: 3.0.3
+info:
+  title: My API
+  description: API untuk aplikasi saya
+  version: 1.0.0
+  contact:
+    name: Dreammaker001
+    email: your-email@example.com
+    
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+paths:
+  /users:
+    get:
+      summary: Get all users
+      description: Mengambil daftar semua pengguna
+      tags:
+        - Users
+      parameters:
+        - name: limit
+          in: query
+          description: Jumlah maksimal pengguna yang dikembalikan
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: page
+          in: query
+          description: Nomor halaman
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Berhasil mengambil daftar pengguna
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create new user
+      description: Membuat pengguna baru
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Pengguna berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      description: Mengambil detail pengguna berdasarkan ID
+      tags:
+        - Users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID pengguna
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Detail pengguna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Pengguna tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-07-07T03:12:53Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-07-07T03:12:53Z"
+      required:
+        - id
+        - name
+        - email
+        
+    CreateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          format: password
+          example: "secretpassword"
+      required:
+        - name
+        - email
+        - password
+        
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 100
+        total_pages:
+          type: integer
+          example: 10
+          
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Something went wrong"
+        error_code:
+          type: string
+          example: "VALIDATION_ERROR"
+        details:
+          type: array
+          items:
+            type: string
+          example: ["Email is required", "Password must be at least 8 characters"]
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
